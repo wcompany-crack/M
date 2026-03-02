@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마테르나 성국 시스템 구조도</title>
+<style>
+  :root {
+    --bg: #0a0a1a; --card: #151528; --border: #333;
+    --gold: #f59e0b; --gold-dim: #92600a; --gold-light: #fbbf24;
+    --purple: #8b5cf6; --purple-light: #a78bfa;
+    --green: #10b981; --green-light: #34d399;
+    --rose: #f43f5e; --rose-light: #fb7185;
+    --cyan: #06b6d4; --cyan-light: #22d3ee;
+    --text: #e0e0e0; --text-dim: #888; --text-dark: #555;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+  h1 { text-align: center; font-size: 28px; color: var(--gold-light); margin-bottom: 6px; letter-spacing: 2px; }
+  .subtitle { text-align: center; color: var(--text-dark); font-size: 13px; margin-bottom: 30px; }
+
+  .section-title {
+    font-size: 18px; font-weight: 700; margin: 30px 0 14px;
+    padding-left: 12px; border-left: 4px solid var(--gold); color: var(--gold-light);
+  }
+  .section-title.purple { border-color: var(--purple); color: var(--purple-light); }
+  .section-title.green { border-color: var(--green); color: var(--green-light); }
+  .section-title.rose { border-color: var(--rose); color: var(--rose-light); }
+  .section-title.cyan { border-color: var(--cyan); color: var(--cyan-light); }
+
+  /* === FILE CARDS === */
+  .file-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 10px; }
+  .file-card {
+    border-radius: 12px; padding: 18px; text-align: center; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s; position: relative;
+  }
+  .file-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+  .file-card.gold { background: linear-gradient(135deg, #1a1510, #2a1a0a); border: 2px solid var(--gold); }
+  .file-card.purple { background: linear-gradient(135deg, #1a1a3e, #2a1a4e); border: 2px solid var(--purple); }
+  .file-card.green { background: linear-gradient(135deg, #0d1b15, #0d2b1a); border: 2px solid var(--green); }
+  .file-icon { font-size: 32px; margin-bottom: 6px; }
+  .file-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .file-desc { font-size: 11px; color: var(--text-dim); }
+  .file-badge {
+    position: absolute; top: -8px; right: -8px; color: white;
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+  }
+  .file-badge.core { background: var(--rose); }
+  .file-badge.ref { background: var(--green); }
+  .file-badge.data { background: var(--purple); }
+
+  /* === CHARACTER CARDS === */
+  .char-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .char-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .char-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .char-card.active { border-color: var(--gold); box-shadow: 0 0 15px rgba(245,158,11,0.2); }
+  .char-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .char-info { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+  .char-rank { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-top: 6px; }
+  .rank-seed { background: #2a2a2a; color: #aaa; }
+  .rank-sprout { background: #1a2e1a; color: #4ade80; }
+  .rank-bloom { background: #1a1a3e; color: #818cf8; }
+  .rank-full { background: #2e1a2e; color: #c084fc; }
+  .rank-fruit { background: #2e1a0a; color: var(--gold-light); }
+  .rank-unknown { background: #2e0a0a; color: var(--rose-light); }
+
+  /* === CHARACTER DETAIL (collapsible) === */
+  .char-detail {
+    display: none; background: #0d0d20; border: 1px solid var(--gold-dim);
+    border-radius: 12px; padding: 20px; margin-bottom: 20px;
+    animation: slideDown 0.3s ease;
+  }
+  .char-detail.show { display: block; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .detail-title { font-size: 20px; font-weight: 700; color: var(--gold-light); }
+  .detail-close { cursor: pointer; color: var(--text-dim); font-size: 20px; padding: 4px 10px; border-radius: 6px; }
+  .detail-close:hover { background: #222; color: #fff; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .detail-section { background: #111125; border-radius: 8px; padding: 14px; }
+  .detail-section h4 { font-size: 12px; color: var(--gold); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .detail-section p, .detail-section ul { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+  .detail-section ul { padding-left: 16px; }
+  .detail-section li { margin-bottom: 2px; }
+  .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { background: #1a1a3e; color: var(--purple-light); padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+  .tag.rose { background: #2e1020; color: var(--rose-light); }
+  .tag.cyan { background: #0a1a20; color: var(--cyan-light); }
+
+  /* === PIPELINE === */
+  .pipeline { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 16px 0; margin-bottom: 20px; }
+  .pipe-step {
+    flex-shrink: 0; background: var(--card); border: 1px solid #444;
+    border-radius: 10px; padding: 12px 14px; text-align: center; min-width: 120px;
+  }
+  .pipe-step .step-num { font-size: 10px; color: var(--gold); font-weight: 700; margin-bottom: 3px; }
+  .pipe-step .step-label { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .pipe-step .step-detail { font-size: 10px; color: var(--text-dim); }
+  .pipe-arrow { flex-shrink: 0; color: var(--gold); font-size: 18px; padding: 0 5px; }
+
+  /* === CATEGORY GRID === */
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .cat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; cursor: pointer; transition: border-color 0.2s;
+  }
+  .cat-card:hover { border-color: var(--gold); }
+  .cat-card .cat-num { font-size: 28px; font-weight: 800; }
+  .cat-card .cat-label { font-size: 13px; font-weight: 600; margin: 4px 0; }
+  .cat-card .cat-detail { font-size: 10px; color: var(--text-dim); line-height: 1.5; }
+  .cat-card .cat-items { display: none; margin-top: 10px; font-size: 11px; color: var(--text-dim); line-height: 1.7; border-top: 1px solid #333; padding-top: 10px; }
+  .cat-card.expanded .cat-items { display: block; }
+
+  /* === KEYWORD BOOK === */
+  .kb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .kb-card {
+    background: #101510; border: 1px solid #2a3a2a; border-radius: 8px;
+    padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .kb-card:hover { border-color: var(--green); }
+  .kb-num {
+    background: var(--green); color: #000; font-size: 10px; font-weight: 800;
+    width: 26px; height: 26px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .kb-title { font-size: 12px; font-weight: 700; color: var(--green-light); }
+  .kb-chars { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+  /* === STATS === */
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-item { background: var(--card); border-radius: 10px; padding: 18px; text-align: center; }
+  .stat-num { font-size: 32px; font-weight: 800; }
+  .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+  /* === SACRED/NECTAR === */
+  .ritual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .ritual-card { border-radius: 12px; padding: 18px; }
+  .ritual-card.sacred { background: linear-gradient(135deg, #0a1a1a, #0d2020); border: 2px solid var(--cyan); }
+  .ritual-card.nectar { background: linear-gradient(135deg, #1a0a1a, #200d1a); border: 2px solid var(--rose); }
+  .ritual-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  .ritual-info { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+  .ritual-chars { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .ritual-char { padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+
+  /* === EDIT MODAL === */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #1a1a2e; border: 2px solid var(--gold); border-radius: 14px;
+    width: 90%; max-width: 800px; max-height: 85vh; overflow-y: auto; padding: 24px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--gold-light); }
+  .modal-close { cursor: pointer; background: none; border: none; color: var(--text-dim); font-size: 22px; padding: 4px 10px; }
+  .modal-close:hover { color: #fff; }
+  .modal textarea {
+    width: 100%; min-height: 300px; background: #0d0d1a; color: var(--text);
+    border: 1px solid #444; border-radius: 8px; padding: 14px; font-family: 'Consolas', monospace;
+    font-size: 13px; line-height: 1.6; resize: vertical;
+  }
+  .modal textarea:focus { outline: none; border-color: var(--gold); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-save { background: var(--gold); color: #000; }
+  .btn-copy { background: #333; color: var(--text); }
+  .btn-export { background: var(--green); color: #000; }
+  .modal-hint { font-size: 11px; color: var(--text-dim); margin-top: 10px; }
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #000; padding: 10px 24px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; display: none; z-index: 2000;
+    animation: fadeInOut 2s ease;
+  }
+  @keyframes fadeInOut { 0%{opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{opacity:0} }
+
+  /* === LEGEND === */
+  .legend { display: flex; justify-content: center; gap: 20px; padding: 12px; background: #111; border-radius: 8px; font-size: 11px; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* === CONNECTION MAP === */
+  .conn-section { background: #111122; border: 1px solid #333; border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+  .conn-title { font-size: 15px; font-weight: 700; color: var(--gold-light); margin-bottom: 14px; text-align: center; }
+  .conn-flow { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .conn-box { border-radius: 10px; padding: 14px 18px; text-align: center; flex: 1; min-width: 180px; }
+  .conn-box .conn-label { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .conn-box .conn-items { font-size: 10px; color: #aaa; line-height: 1.6; }
+  .conn-arrow { color: var(--text-dim); font-size: 18px; flex-shrink: 0; }
+
+  @media (max-width: 768px) {
+    .file-grid { grid-template-columns: 1fr; }
+    .char-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: 1fr 1fr; }
+    .ritual-grid { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipe-arrow { transform: rotate(90deg); }
+    .conn-flow { flex-direction: column; }
+    .conn-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>&#9962; 마테르나 성국 시스템 구조도</h1>
+  <p class="subtitle">세계관 + RP시스템 + 이미지 생성기 통합 구조 &middot; v2.0 (17캐릭터)</p>
+
+  <!-- ===== LEGEND ===== -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> 텍스트 파일 (RP용)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> 제너레이터 (Python)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> 키워드북 (20섹션)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div> 성수/감로수</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rose)"></div> H씬/NSFW</div>
+  </div>
+
+  <!-- ===== FILE CARDS: RP Files ===== -->
+  <div class="section-title">&#128220; RP 텍스트 파일</div>
+  <div class="file-grid">
+    <div class="file-card gold" onclick="openEdit('mainprompt')">
+      <div class="file-badge core">CORE</div>
+      <div class="file-icon">&#128220;</div>
+      <div class="file-name" style="color:var(--gold-light)">메인프롬프트</div>
+      <div class="file-desc">5000자 한도<br>세계관 &middot; 캐릭터 &middot; 규칙 &middot; RP시스템</div>
+    </div>
+    <div class="file-card green" onclick="openEdit('keyword')">
+      <div class="file-badge ref">REF</div>
+      <div class="file-icon">&#128218;</div>
+      <div class="file-name" style="color:var(--green-light)">키워드북</div>
+      <div class="file-desc">400자 &times; 20섹션<br>품급 &middot; 캐릭터 &middot; NPC &middot; 마수 &middot; 이미지</div>
+    </div>
+    <div class="file-card gold" onclick="openEdit('worldbuild')">
+      <div class="file-badge data">FULL</div>
+      <div class="file-icon">&#127758;</div>
+      <div class="file-name" style="color:var(--gold-light)">세계관 원본</div>
+      <div class="file-desc">1577줄, 제한 없음<br>17장 전체 세계관 데이터</div>
+    </div>
+  </div>
+
+  <!-- ===== FILE CARDS: Generator ===== -->
+  <div class="section-title purple">&#128296; 이미지 제너레이터 (materna/generators/)</div>
+  <div class="file-grid">
+    <div class="file-card purple">
+      <div class="file-badge core">SAFE</div>
+      <div class="file-icon">&#9881;</div>
+      <div class="file-name" style="color:var(--purple-light)">test_representative_safe.py</div>
+      <div class="file-desc">17캐릭터 &times; A~K 표정 11종<br>safe_v2/ 출력</div>
+    </div>
+    <div class="file-card purple">
+      <div class="file-badge" style="background:var(--rose)">NSFW</div>
+      <div class="file-icon">&#127912;</div>
+      <div class="file-name" style="color:var(--purple-light)">test_representative_nsfw.py</div>
+      <div class="file-desc">누드3 + 란제리2 &times; 17캐릭터<br>nsfw_v1/ 출력</div>
+    </div>
+    <div class="file-card purple">
+      <div class="file-badge" style="background:var(--rose)">H씬</div>
+      <div class="file-icon">&#9654;</div>
+      <div class="file-name" style="color:var(--purple-light)">test_representative_nsfw_h.py</div>
+      <div class="file-desc">POV 붕괴5단계 &times; 17캐릭터<br>nsfw_h1/ 출력</div>
+    </div>
+  </div>
+  <!-- 서브 제너레이터 -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+    <div style="background:var(--card);border:1px solid #444;border-radius:8px;padding:12px;font-size:12px;">
+      <div style="color:var(--purple-light);font-weight:700;margin-bottom:4px;">&#128247; materna_vn_generate.py</div>
+      <div style="color:var(--text-dim)">VN 스탠딩 앵글 &middot; vn_base/</div>
+    </div>
+    <div style="background:var(--card);border:1px solid #444;border-radius:8px;padding:12px;font-size:12px;">
+      <div style="color:var(--purple-light);font-weight:700;margin-bottom:4px;">&#128444; materna_expression_swap.py</div>
+      <div style="color:var(--text-dim)">표정 인페인팅 &middot; vn_expr/</div>
+    </div>
+    <div style="background:var(--card);border:1px solid #444;border-radius:8px;padding:12px;font-size:12px;">
+      <div style="color:var(--green-light);font-weight:700;margin-bottom:4px;">&#128247; tools/compose_luna.py</div>
+      <div style="color:var(--text-dim)">배경+캐릭터 Pillow 합성 &middot; luna_chat_v1/</div>
+    </div>
+  </div>
+
+  <!-- ===== CONNECTION MAP ===== -->
+  <div class="conn-section">
+    <div class="conn-title">&#9889; 파일 연결 구조</div>
+    <div class="conn-flow">
+      <div class="conn-box" style="background:#1a1510;border:1px solid var(--gold);">
+        <div class="conn-label" style="color:var(--gold-light)">&#128220; RP 텍스트 3종</div>
+        <div class="conn-items">
+          AI 챗봇이 참조<br>
+          세계관/캐릭터/규칙 정의<br>
+          <strong style="color:var(--gold-light)">&#9654; "RP에서 어떻게 행동"</strong>
+        </div>
+      </div>
+      <div class="conn-arrow">&#10231;</div>
+      <div class="conn-box" style="background:#151028;border:1px solid var(--purple);">
+        <div class="conn-label" style="color:var(--purple-light)">&#128296; 제너레이터 3파일</div>
+        <div class="conn-items">
+          Part1: 캐릭터 SD 프롬프트<br>
+          Part2: 이미지 카테고리 정의<br>
+          Part3: ComfyUI API 실행<br>
+          <strong style="color:var(--purple-light)">&#9654; "이미지 자동 생성"</strong>
+        </div>
+      </div>
+      <div class="conn-arrow">&#10231;</div>
+      <div class="conn-box" style="background:#0d1520;border:1px solid #3b82f6;">
+        <div class="conn-label" style="color:#93c5fd">&#127912; ComfyUI (port 8000)</div>
+        <div class="conn-items">
+          API 직접 호출<br>
+          perfectdeliberate_v40A<br>
+          1216&times;832 &rarr; 1456&times;1000 업스케일<br>
+          <strong style="color:#93c5fd">&#9654; "최종 이미지 출력"</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHARACTERS ===== -->
+  <div class="section-title">&#128081; 캐릭터 (17명) &mdash; 클릭하여 상세보기</div>
+  <div class="char-grid" id="charGrid"></div>
+  <div id="charDetail" class="char-detail"></div>
+
+  <!-- ===== PIPELINE ===== -->
+  <div class="section-title">&#127912; ComfyUI 이미지 파이프라인</div>
+  <div class="pipeline">
+    <div class="pipe-step"><div class="step-num">STEP 1</div><div class="step-label">Checkpoint</div><div class="step-detail">perfectdeliberate<br>v40A</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step"><div class="step-num">STEP 2</div><div class="step-label">CLIPTextEncode</div><div class="step-detail">Positive<br>Negative</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step"><div class="step-num">STEP 3</div><div class="step-label">KSampler</div><div class="step-detail">1216&times;832<br>30 steps, CFG 7</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step"><div class="step-num">STEP 4</div><div class="step-label">LatentUpscale</div><div class="step-detail">bislerp<br>&rarr; 1456&times;1000</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step"><div class="step-num">STEP 5</div><div class="step-label">KSampler Hires</div><div class="step-detail">20 steps<br>denoise 0.45</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step"><div class="step-num">STEP 6</div><div class="step-label">VAEDecode</div><div class="step-detail">latent &rarr;<br>pixel</div></div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step" style="border-color:var(--gold);">
+      <div class="step-num" style="color:var(--gold);">OUTPUT</div>
+      <div class="step-label">Image Saver</div>
+      <div class="step-detail">WebP q90<br>materna/safe_v2/</div>
+    </div>
+  </div>
+
+  <!-- ===== IMAGE CATEGORIES ===== -->
+  <div class="section-title">&#128444; 이미지 카테고리 &mdash; 클릭하여 펼치기</div>
+  <div class="cat-grid" id="catGrid"></div>
+
+  <!-- ===== SACRED / NECTAR WATER ===== -->
+  <div class="section-title cyan">&#128167; 성수 / 감로수 의식</div>
+  <div class="ritual-grid">
+    <div class="ritual-card sacred">
+      <div class="ritual-title" style="color:var(--cyan-light)">&#128167; 성수 (Sacred Water)</div>
+      <div class="ritual-info">
+        <strong>원료:</strong> 가슴/겨드랑이 근처 신성한 땀<br>
+        <strong>의식:</strong> 팔교차 겨드랑이 노출 + 스쿼트<br>
+        <strong>수집:</strong> 보조 사제가 병에 모아줌<br>
+        <strong>태도:</strong> 종교적 의식 &rarr; 부끄러움 없음<br>
+        <strong>생산:</strong> 대량 생산, 수출 주력 상품
+      </div>
+      <div class="ritual-chars">
+        <span class="ritual-char" style="background:#1a2e2e;color:var(--cyan-light)">아멜리아 (결실K)</span>
+        <span class="ritual-char" style="background:#1a2e2e;color:var(--cyan-light)">이리스 (만개J)</span>
+        <span class="ritual-char" style="background:#1a2e2e;color:var(--cyan-light)">티아 (개화H)</span>
+        <span class="ritual-char" style="background:#1a2e2e;color:var(--cyan-light)">루나 (만개H)</span>
+      </div>
+    </div>
+    <div class="ritual-card nectar">
+      <div class="ritual-title" style="color:var(--rose-light)">&#127863; 감로수 (Nectar Water)</div>
+      <div class="ritual-info">
+        <strong>원료:</strong> 애액 (신성력 극농축 체액)<br>
+        <strong>의식:</strong> 스쿼트 + 자위, 의식용 병에 채취<br>
+        <strong>비밀:</strong> 여왕 + 장로 + 최고위급만 인지<br>
+        <strong>태도:</strong> 신성한 봉헌 &rarr; 수치심 없음<br>
+        <strong>가치:</strong> 금의 수백 배, 극소량
+      </div>
+      <div class="ritual-chars">
+        <span class="ritual-char" style="background:#2e1a1a;color:var(--rose-light)">아멜리아 (최고품질)</span>
+        <span class="ritual-char" style="background:#2e1a1a;color:var(--rose-light)">이리스 (고품질)</span>
+        <span class="ritual-char" style="background:#2e1a1a;color:var(--rose-light)">티아 (저품질)</span>
+        <span class="ritual-char" style="background:#2e1a1a;color:var(--rose-light)">루나 (저품질)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KEYWORD BOOK ===== -->
+  <div class="section-title green">&#128218; 키워드북 20섹션</div>
+  <div class="kb-grid" id="kbGrid"></div>
+
+  <!-- ===== STATS ===== -->
+  <div class="section-title">&#128202; 전체 통계</div>
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num" style="color:var(--gold-light)" id="statChars">17</div>
+      <div class="stat-label">캐릭터 (아르셀라12 + 타국5)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" style="color:var(--green-light)" id="statCats">561+</div>
+      <div class="stat-label">표정세트 (17&times;11 A-K)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" style="color:var(--rose-light)" id="statH">85</div>
+      <div class="stat-label">NSFW (17&times;5) + H씬 (17&times;5)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" style="color:var(--cyan-light)" id="statSpecial">8</div>
+      <div class="stat-label">성수4 + 감로수4</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">편집</div>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <textarea id="modalText" spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-copy" onclick="copyText()">&#128203; 복사</button>
+      <button class="btn btn-export" onclick="exportFile()">&#128190; 내보내기</button>
+      <button class="btn btn-save" onclick="saveEdit()">&#128190; 저장 (로컬)</button>
+    </div>
+    <div class="modal-hint" id="modalHint"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+const CHARACTERS = [
+  // === 아르셀라 메인 6인 ===
+  { key:'amelia', name:'아멜리아', age:33, rank:'결실', cup:'K', sp:1500,
+    faction:'아르셀라', role:'여왕', hair:'은백색 쉬뇽 업도', eyes:'사파이어 블루',
+    trait:'자애+위엄', speech:'「~하렴」「~하거라」',
+    romance:'금지된 사랑 (난이도 최고)',
+    hPositions:['기승위','파이즈리'], rankClass:'rank-fruit',
+    sacred:true, nectar:true, nectarQuality:'최고품질',
+    combat:'SSS+', specialty:'수호계통 S + 치유 A' },
+  { key:'iris', name:'이리스', age:'100+', rank:'만개', cup:'J', sp:1200,
+    faction:'아르셀라', role:'장로/비서', hair:'은빛 보라 업도', eyes:'보라',
+    trait:'고풍 지혜', speech:'「~이지요」「~란다」',
+    romance:'백년의 고독 (난이도 높음)',
+    hPositions:['정상위','파이즈리+펠라'], rankClass:'rank-full',
+    sacred:true, nectar:true, nectarQuality:'고품질',
+    combat:'A+', specialty:'해석계통 S' },
+  { key:'tia', name:'티아', age:29, rank:'개화', cup:'G', sp:900,
+    faction:'아르셀라', role:'학자/기술자', hair:'밤색 하프업도', eyes:'갈색',
+    trait:'지적 호기심', speech:'「~거든!」「~잖아!」',
+    romance:'실험과 사랑 (난이도 보통)',
+    hPositions:['교배프레스','후배위'], rankClass:'rank-bloom',
+    sacred:true, nectar:true, nectarQuality:'저품질',
+    combat:'SS+', specialty:'해석 S + 강화 B' },
+  { key:'luna', name:'루나', age:27, rank:'만개', cup:'H', sp:800,
+    faction:'아르셀라', role:'치유사', hair:'파스텔 연두 웨이브 롱', eyes:'연두',
+    trait:'온화 포근 모성', speech:'「~예요」「~세요」',
+    romance:'치유자의 상처 (난이도 쉬움)',
+    hPositions:['대면좌위','스푼'], rankClass:'rank-full',
+    sacred:true, nectar:true, nectarQuality:'저품질',
+    combat:'S+', specialty:'치유계통 S' },
+  { key:'lily', name:'릴리', age:20, rank:'새싹', cup:'E', sp:600,
+    faction:'아르셀라', role:'학생', hair:'오렌지 단발', eyes:'오렌지',
+    trait:'활발 호기심', speech:'「~야!」「우와!」「대박!」',
+    romance:'처음이라서 (난이도 쉬움)',
+    hPositions:['입위','기승위'], rankClass:'rank-sprout',
+    sacred:false, nectar:false,
+    combat:'D+', specialty:'강화 C + 수호 D' },
+  { key:'moa', name:'모아', age:18, rank:'씨앗', cup:'E', sp:500,
+    faction:'아르셀라', role:'예지자', hair:'회색 생머리 뱅', eyes:'아쿠아',
+    trait:'차분 성숙', speech:'「~입니다」 담담',
+    romance:'보이는 미래 (난이도 특수)',
+    hPositions:['정상위','측위'], rankClass:'rank-seed',
+    sacred:false, nectar:false,
+    combat:'EX(예지)', specialty:'4계통 밖 특수' },
+  // === 아르셀라 NPC 6인 ===
+  { key:'cora', name:'코라', age:28, rank:'개화', cup:'F', sp:700,
+    faction:'아르셀라', role:'상인NPC', hair:'갈색 컬리 하프업', eyes:'갈색',
+    trait:'활발 상인', speech:'「~어요」「~네요」',
+    romance:'-', hPositions:['-'], rankClass:'rank-bloom',
+    sacred:false, nectar:false, combat:'B', specialty:'강화 B' },
+  { key:'vela', name:'벨라', age:35, rank:'개화', cup:'G', sp:650,
+    faction:'아르셀라', role:'사서NPC', hair:'검은 롱 스트레이트', eyes:'다크 브라운',
+    trait:'고요 하녀', speech:'「~습니다」',
+    romance:'-', hPositions:['-'], rankClass:'rank-bloom',
+    sacred:false, nectar:false, combat:'C+', specialty:'수호 C' },
+  { key:'penelope', name:'페넬로페', age:26, rank:'만개', cup:'D', sp:750,
+    faction:'아르셀라', role:'서기관NPC', hair:'갈색 단발', eyes:'갈색',
+    trait:'꼼꼼 비서', speech:'「~이옵니다」「~하옵소서」',
+    romance:'-', hPositions:['-'], rankClass:'rank-full',
+    sacred:false, nectar:false, combat:'B+', specialty:'해석 B' },
+  { key:'guinevere', name:'귀네비어', age:30, rank:'개화', cup:'F', sp:700,
+    faction:'아르셀라', role:'기사NPC', hair:'금발 포니테일', eyes:'블루',
+    trait:'화려 귀족', speech:'「~하지요」',
+    romance:'-', hPositions:['-'], rankClass:'rank-bloom',
+    sacred:false, nectar:false, combat:'SS', specialty:'수호 S' },
+  { key:'aria', name:'아리아', age:24, rank:'만개', cup:'D', sp:720,
+    faction:'아르셀라', role:'프롬프트NPC', hair:'연보라 번 헤어스틱', eyes:'보라',
+    trait:'온화 연구자', speech:'「~해요」',
+    romance:'-', hPositions:['-'], rankClass:'rank-full',
+    sacred:false, nectar:false, combat:'A', specialty:'해석 A' },
+  { key:'viola', name:'비올라', age:32, rank:'개화', cup:'F', sp:680,
+    faction:'아르셀라', role:'음악가NPC', hair:'와인레드 업도', eyes:'레드 브라운',
+    trait:'화려 무도', speech:'「~거든요」',
+    romance:'-', hPositions:['-'], rankClass:'rank-bloom',
+    sacred:false, nectar:false, combat:'B', specialty:'강화 B' },
+  // === 타국 NPC 5인 ===
+  { key:'lena', name:'레나', age:28, rank:'-', cup:'C', sp:'-',
+    faction:'벨가르드', role:'타국NPC', hair:'검은 단발', eyes:'회색',
+    trait:'냉철 귀족', speech:'「~이다」「~냐」',
+    romance:'-', hPositions:['-'], rankClass:'rank-unknown',
+    sacred:false, nectar:false, combat:'A', specialty:'전사계열' },
+  { key:'lien', name:'리엔', age:22, rank:'-', cup:'E', sp:'-',
+    faction:'실바렌', role:'타국NPC', hair:'갈색 웨이브 롱 여우귀', eyes:'앰버',
+    trait:'활발 대상인', speech:'「~잖아」「~거야」',
+    romance:'-', hPositions:['-'], rankClass:'rank-unknown',
+    sacred:false, nectar:false, combat:'B', specialty:'정찰' },
+  { key:'hana', name:'하나', age:19, rank:'-', cup:'D', sp:'-',
+    faction:'실바렌', role:'타국NPC', hair:'연핑크 단발 토끼귀', eyes:'핑크',
+    trait:'귀여운 토끼', speech:'「~해요~!」',
+    romance:'-', hPositions:['-'], rankClass:'rank-unknown',
+    sacred:false, nectar:false, combat:'C', specialty:'회복' },
+  { key:'serenity', name:'세레니티', age:35, rank:'-', cup:'F', sp:'-',
+    faction:'천상계', role:'타국NPC', hair:'플래티넘 블론드 티아라', eyes:'블루',
+    trait:'청명 천사', speech:'「~입니다」',
+    romance:'-', hPositions:['-'], rankClass:'rank-unknown',
+    sacred:false, nectar:false, combat:'SSS', specialty:'천상술' },
+  { key:'mora', name:'모라', age:'?', rank:'???', cup:'?', sp:'????',
+    faction:'외신', role:'외신NPC', hair:'흑발 롱', eyes:'적홍',
+    trait:'초연 무심', speech:'「~네요」「~일까요」',
+    romance:'심연의 유혹 (히든)',
+    hPositions:['파이즈리','기승위'], rankClass:'rank-unknown',
+    sacred:false, nectar:false,
+    combat:'????', specialty:'외신-모성의 그림자' }
+];
+
+const CATEGORIES = [
+  { label:'표정 A~K (Safe)', num:11, color:'var(--gold-light)', detail:'A:따뜻한미소 / B:걱정 / C:행복 / D:부드러운미소 / E:슬픔 / F:부끄러움 / G:놀람 / H:꾸중 / I:놀리기 / J:수줍음 / K:탈진&mdash;캐릭터별 세계관 배경 매핑' },
+  { label:'배경 33종', num:33, color:'var(--green-light)', detail:'경매장3 / 대성당4 / 도서관4 / 수련장3 / 시장4 / 영빈관3 / 온천6 / 왕궁4 / 전장2 / 정원2 / 항구2 &mdash; materna_chat/backgrounds/' },
+  { label:'NSFW 카테고리', num:5, color:'var(--rose-light)', detail:'N1:누드정면 / N2:누드옆면 / N3:누드위에서 / L1:블랙란제리 / L2:화이트네글리제 &mdash; nsfw_v1/' },
+  { label:'H씬 POV 단계', num:5, color:'var(--rose-light)', detail:'H1:저항(POV손터치) / H2:동요(POV정상위) / H3:항복(기승위) / H4:몰입(후배위) / H5:붕괴(아헤가오) &mdash; nsfw_h1/' },
+  { label:'채팅 이미지 (크랙)', num:11, color:'var(--cyan-light)', detail:'배경33종+투명캐릭터PNG → Pillow합성 → luna_A~K.webp<br>현재 루나(Luna) 완성. 다른 캐릭터 순차 진행 예정' },
+  { label:'성수', num:4, color:'var(--cyan-light)', detail:'아멜리아(결실), 이리스(만개), 티아(개화), 루나(만개)<br>원료: 신성한 땀 &middot; 의식: 팔교차+스쿼트' },
+  { label:'감로수', num:4, color:'var(--rose-light)', detail:'아멜리아(최고), 이리스(고품질), 티아(저품질), 루나(저품질)<br>원료: 애액 &middot; 의식: 스쿼트+자위 &middot; 극비' }
+];
+
+const KEYWORD_SECTIONS = [
+  {n:1, title:'품급 판정체계', chars:'379자'},
+  {n:2, title:'신성술 4계통', chars:'274자'},
+  {n:3, title:'신성기관', chars:'258자'},
+  {n:4, title:'아멜리아', chars:'188자'},
+  {n:5, title:'이리스', chars:'182자'},
+  {n:6, title:'티아', chars:'185자'},
+  {n:7, title:'루나', chars:'200자'},
+  {n:8, title:'릴리', chars:'165자'},
+  {n:9, title:'모아', chars:'217자'},
+  {n:10, title:'NPC', chars:'277자'},
+  {n:11, title:'마수 하급/중급', chars:'217자'},
+  {n:12, title:'마수 상급/엔드', chars:'244자'},
+  {n:13, title:'음독', chars:'313자'},
+  {n:14, title:'봉인전쟁', chars:'228자'},
+  {n:15, title:'수도지도', chars:'313자'},
+  {n:16, title:'모라', chars:'266자'},
+  {n:17, title:'이미지 장소', chars:'377자'},
+  {n:18, title:'이미지 감정', chars:'373자'},
+  {n:19, title:'이미지 시간/의상', chars:'343자'},
+  {n:20, title:'이미지 컵/징표', chars:'321자'}
+];
+
+// ===== FILE PATHS (for edit modal) =====
+const FILE_INFO = {
+  mainprompt: { title:'메인프롬프트', file:'materna_chat/{캐릭터}/메인프롬프트.txt', hint:'2000자 한도 (Windows 메모장 기준). 캐릭터별 RP 시스템 프롬프트.' },
+  keyword: { title:'키워드북', file:'마테르나_키워드북.txt', hint:'400자 × 20섹션. RP AI의 참조 데이터.' },
+  worldbuild: { title:'세계관 원본', file:'materna/docs/마테르나_세계관_작업.txt', hint:'제한 없음 (1577줄). 전체 세계관 원본 데이터.' },
+  part1: { title:'Safe 대표이미지', file:'materna/generators/test_representative_safe.py', hint:'17캐릭터 × A~K 표정 11종. safe_v2/ 출력.' },
+  part2: { title:'NSFW 대표이미지', file:'materna/generators/test_representative_nsfw.py', hint:'17캐릭터 × 5종 (누드3+란제리2). nsfw_v1/ 출력.' },
+  part3: { title:'H씬 POV', file:'materna/generators/test_representative_nsfw_h.py', hint:'17캐릭터 × 5단계 POV. nsfw_h1/ 출력.' }
+};
+
+// ===== RENDER =====
+function renderCharacters() {
+  const grid = document.getElementById('charGrid');
+  const factionColor = {
+    '아르셀라': 'var(--gold-light)', '벨가르드': 'var(--rose-light)',
+    '실바렌': 'var(--green-light)', '천상계': 'var(--cyan-light)', '외신': 'var(--purple-light)'
+  };
+  grid.innerHTML = CHARACTERS.map(c => `
+    <div class="char-card" onclick="toggleChar('${c.key}')">
+      <div class="char-name" style="color:${factionColor[c.faction]||'var(--gold-light)'}">${c.name}</div>
+      <div class="char-info">
+        ${c.age}세 | ${c.cup}컵 | ${c.faction}<br>
+        ${c.role}
+      </div>
+      <div class="char-rank ${c.rankClass}">${c.rank}</div>
+    </div>
+  `).join('');
+}
+
+let activeChar = null;
+function toggleChar(key) {
+  const detail = document.getElementById('charDetail');
+  if (activeChar === key) {
+    detail.classList.remove('show');
+    activeChar = null;
+    document.querySelectorAll('.char-card').forEach(c => c.classList.remove('active'));
+    return;
+  }
+  activeChar = key;
+  const c = CHARACTERS.find(ch => ch.key === key);
+  document.querySelectorAll('.char-card').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const sacredTag = c.sacred ? '<span class="tag cyan">성수 가능</span>' : '';
+  const nectarTag = c.nectar ? `<span class="tag rose">감로수 (${c.nectarQuality})</span>` : '';
+
+  detail.innerHTML = `
+    <div class="detail-header">
+      <div class="detail-title">${c.name} &mdash; ${c.role}</div>
+      <div class="detail-close" onclick="toggleChar('${key}')">&times;</div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h4>기본 정보</h4>
+        <ul>
+          <li><strong>나이:</strong> ${c.age}세</li>
+          <li><strong>소속:</strong> ${c.faction}</li>
+          <li><strong>품급:</strong> ${c.rank} / ${c.cup}컵</li>
+          <li><strong>SP:</strong> ${c.sp}</li>
+          <li><strong>전투력:</strong> ${c.combat}</li>
+          <li><strong>특기:</strong> ${c.specialty}</li>
+        </ul>
+      </div>
+      <div class="detail-section">
+        <h4>외형</h4>
+        <ul>
+          <li><strong>머리:</strong> ${c.hair}</li>
+          <li><strong>눈:</strong> ${c.eyes}</li>
+          <li><strong>성격:</strong> ${c.trait}</li>
+          <li><strong>말투:</strong> ${c.speech}</li>
+        </ul>
+      </div>
+      <div class="detail-section">
+        <h4>로맨스</h4>
+        <p>${c.romance}</p>
+        <h4 style="margin-top:10px">H씬 체위</h4>
+        <div class="tag-list">${c.hPositions.map(p => `<span class="tag rose">${p}</span>`).join('')}</div>
+      </div>
+      <div class="detail-section">
+        <h4>특수 생산</h4>
+        <div class="tag-list">
+          ${sacredTag || '<span class="tag">불가 (품급 부족)</span>'}
+          ${nectarTag}
+        </div>
+      </div>
+    </div>
+  `;
+  detail.classList.add('show');
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderCategories() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = CATEGORIES.map((cat, i) => `
+    <div class="cat-card" onclick="this.classList.toggle('expanded')">
+      <div class="cat-num" style="color:${cat.color}">${cat.num}</div>
+      <div class="cat-label">${cat.label}</div>
+      <div class="cat-detail">클릭하여 상세보기</div>
+      <div class="cat-items">${cat.detail}</div>
+    </div>
+  `).join('');
+}
+
+function renderKeywordBook() {
+  const grid = document.getElementById('kbGrid');
+  grid.innerHTML = KEYWORD_SECTIONS.map(s => `
+    <div class="kb-card" onclick="openEdit('keyword')">
+      <div class="kb-num">${s.n}</div>
+      <div>
+        <div class="kb-title">${s.title}</div>
+        <div class="kb-chars">${s.chars}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== EDIT MODAL =====
+let currentEditKey = null;
+
+function openEdit(key) {
+  currentEditKey = key;
+  const info = FILE_INFO[key];
+  document.getElementById('modalTitle').textContent = info.title + ' \u2014 ' + info.file;
+  document.getElementById('modalHint').textContent = info.hint;
+
+  // Load from localStorage or show placeholder
+  const saved = localStorage.getItem('materna_' + key);
+  document.getElementById('modalText').value = saved ||
+    '[파일 내용을 여기에 붙여넣고 편집하세요]\n\n경로: C:\\Users\\HG\\Documents\\ComfyUI\\' + info.file;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function saveEdit() {
+  const text = document.getElementById('modalText').value;
+  localStorage.setItem('materna_' + currentEditKey, text);
+  showToast('localStorage에 저장됨');
+}
+
+function copyText() {
+  const textarea = document.getElementById('modalText');
+  textarea.select();
+  document.execCommand('copy');
+  showToast('클립보드에 복사됨');
+}
+
+async function exportFile() {
+  const text = document.getElementById('modalText').value;
+  const info = FILE_INFO[currentEditKey];
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: info.file,
+      types: [{ description: 'Text', accept: { 'text/plain': ['.txt', '.py'] } }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    showToast('파일 저장 완료');
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = info.file; a.click();
+      URL.revokeObjectURL(url);
+      showToast('파일 다운로드됨');
+    }
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2000);
+}
+
+// ESC to close modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ===== INIT =====
+renderCharacters();
+renderCategories();
+renderKeywordBook();
+</script>
+</body>
+</html>
